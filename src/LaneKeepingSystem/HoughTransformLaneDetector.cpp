@@ -86,7 +86,25 @@ template <typename PREC>
 int32_t HoughTransformLaneDetector<PREC>::getLinePositionX(const Lines& lines, const Indices& lineIndices, Direction direction)
 {
     // TODO : Implement this function
-    int32_t positionX = 0;
+     int32_t positionX = 0;
+	float y = 0.0;
+
+	const auto [m,b] = getLineParameters(lines,lineIndices);
+		
+
+	if (m == 0.0 && b == 0.0){
+		if(direction == LEFT){
+			positionX =0;
+	}else{
+			positionX = mImageWidth;
+		}
+	}else{
+				
+			y = mROIHeight/2;
+			positionX = (y-b) / m;
+
+	}
+
 
     return positionX;
 }
