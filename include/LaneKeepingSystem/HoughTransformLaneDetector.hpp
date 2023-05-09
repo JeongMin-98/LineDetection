@@ -95,6 +95,7 @@ public:
      * @return Return frame for debuging
      */
     const cv::Mat& getDebugFrame() const { return mDebugFrame; };
+    const cv::Mat& getDebugROI() const {return mDebugROI; };
 
 private:
     /**
@@ -156,6 +157,8 @@ private:
 
     // Debug Image and flag
     cv::Mat mDebugFrame; ///< The frame for debugging
+    // ROI IMAGE 
+    cv::Mat mDebugROI;
     bool mDebugging;     ///< Debugging or not
 };
 } // namespace Xycar

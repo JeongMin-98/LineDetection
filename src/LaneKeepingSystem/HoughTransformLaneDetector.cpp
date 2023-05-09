@@ -89,21 +89,23 @@ int32_t HoughTransformLaneDetector<PREC>::getLinePositionX(const Lines& lines, c
 	const auto [m,b] = getLineParameters(lines,lineIndices);
 		
 
-	if (m == 0.0 && b == 0.0){
+	if (std::abs(m) <= std::numeric_limits<PREC>::epsilon() && std::abs(b) <= std::numeric_limits<PREC>::epsilon()){
 		if(direction == Direction::LEFT){
-			positionX =0;
-	}else{
+			positionX = 0;
+	    }   
+        else{
 			positionX = mImageWidth;
 		}
-	}else{
+	}
+    else{
 				
-			y = mROIHeight/2;
+			y = static_cast<PREC>(mROIHeight) * 0.5f;
 			positionX = (y-b) / m;
 
 	}
 
 
-    return positionX;
+    return static_cast<int32_t>(positionX);
 }
 
 template <typename PREC>
@@ -127,7 +129,7 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
             y2 = tempLine[HoughIndex::y2];
             if (x2 - x1 == 0)
             {
-                slope = 0.0;
+                slope = 0.0f;
             }
             else 
             {
@@ -181,16 +183,16 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
     cv::GaussianBlur(gray, blur, cv::Size(), 1.);
     // cv::imshow("blur", blur);
 
-    cv::Mat canny;
-    cv::Canny(blur, canny, 150, 200);
+    cv::Mat edge;
+    cv::Canny(blur, edge, mCannyEdgeLowThreshold, mCannyEdgeHighThreshold);
 
     cv::Mat roi;
 
-    roi = canny(cv::Rect(0, mROIStartHeight, mImageWidth, mROIHeight));
-
+    roi = edge(cv::Rect(0, mROIStartHeight, mImageWidth, mROIHeight));
+    
     // roi houghlineP
     Lines houghLines;
-    cv::HoughLinesP(roi, houghLines, 1, CV_PI/180, 45, 45, 20);
+    cv::HoughLinesP(roi, houghLines, 1, CV_PI/180, 50, 35, 10);
 
     if (houghLines.empty())
         return {0, mImageWidth};
@@ -207,6 +209,7 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
 
     if (mDebugging)
         // draw parts
+        roi.copyTo(mDebugROI);
         image.copyTo(mDebugFrame);
 
     return { leftPositionX, rightPositionX };

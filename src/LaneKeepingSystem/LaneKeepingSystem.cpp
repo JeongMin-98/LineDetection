@@ -80,6 +80,7 @@ void LaneKeepingSystem<PREC>::run()
             std::cout << "lpos: " << leftPosisionX << ", rpos: " << rightPositionX << ", mpos: " << estimatedPositionX << std::endl;
             mHoughTransformLaneDetector->drawRectangles(leftPosisionX, rightPositionX, estimatedPositionX);
             cv::imshow("Debug", mHoughTransformLaneDetector->getDebugFrame());
+            cv::imshow("roi", mHoughTransformLaneDetector->getDebugROI());
             cv::waitKey(1);
         }
         // rate.sleep();
