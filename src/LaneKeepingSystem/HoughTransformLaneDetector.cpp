@@ -67,8 +67,10 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
         for (int i = 0; i < linesSize; ++i)
         {
             line = lines[i];
-            x1 = line[0], y1 = line[1];
-            x2 = line[2], y2 = line[3];
+            int32_t x1 = line[0];
+            int32_t y1 = line[1];
+            int32_t x2 = line[2];
+            int32_t y2 = line[3];
             if (x2 - x1 == 0)
             {
                 slope = 0.0;
@@ -77,7 +79,7 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
             {
                 slope = float(y2 - y1) / float(x2 - x1);
             }
-            if (std::abs(slope) > 0 && std::(abs(slope) <= mHoughLineSlopeRange)
+            if (std::abs(slope) > 0 && std::(abs(slope) <= mHoughLineSlopeRange))
             {
                 slopes.push_back(slope);
                 new_lines.push_back(line);
