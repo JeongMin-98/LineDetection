@@ -84,24 +84,22 @@ int32_t HoughTransformLaneDetector<PREC>::getLinePositionX(const Lines& lines, c
 {
     // TODO : Implement this function
     int32_t positionX = 0;
-	float y = 0.0;
+	PREC y = 0.0;
 
 	const auto [m,b] = getLineParameters(lines,lineIndices);
 		
 
-	if (std::abs(m) <= std::numeric_limits<PREC>::epsilon() && std::abs(b) <= std::numeric_limits<PREC>::epsilon()){
-		if(direction == Direction::LEFT){
+	if (std::abs(m) <= std::numeric_limits<PREC>::epsilon() && std::abs(b) <= std::numeric_limits<PREC>::epsilon())
+    {
+		if(direction == Direction::LEFT)
 			positionX = 0;
-	    }   
-        else{
+        else
 			positionX = mImageWidth;
-		}
 	}
-    else{
-				
-			y = static_cast<PREC>(mROIHeight) * 0.5f;
-			positionX = (y-b) / m;
-
+    else
+    {
+        y = static_cast<PREC>(mROIHeight) * 0.5f;
+        positionX = (y-b) / m;
 	}
 
 
@@ -115,10 +113,11 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
         Indices leftLineIndices;
         Indices rightLineIndices;
 
+        int32_t center = static_cast<int32_t>(mImageWidth / 2);
         int32_t x1, y1, x2, y2;
-        std::vector<float> slopes;
+        std::vector<PREC> slopes;
         Lines new_lines;
-        float slope;
+        PREC slope;
         Line line;
         
         for (const auto& tempLine : lines)
@@ -143,28 +142,19 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
         }
 
         Lines left_lines, right_lines;
-        //std::vector<float> left_lines_slope, right_lines_slope;
+        //std::vector<PREC> left_lines_slope, right_lines_slope;
         for (int i = 0; i < new_lines.size(); ++i)
-            {
-                
-                line = new_lines[i];
-                slope = slopes[i];
-                x1 = line[0], y1 = line[1];
-                x2 = line[2], y2 = line[3];
+        {
+            line = new_lines[i];
+            slope = slopes[i];
+            x1 = line[0], y1 = line[1];
+            x2 = line[2], y2 = line[3];
 
-                if((slope < 0 ) && (x2 < 320))
-                {
-                    
-                    leftLineIndices.push_back(i);
-
-                    
-                }
-                else if ((slope > 0) && (x1 > 320))
-                {
-                    rightLineIndices.push_back(i);
-                }
+            if((slope < 0 ) && (x2 < center))
+                leftLineIndices.push_back(i);
+            else if ((slope > 0) && (x1 > center))
+                rightLineIndices.push_back(i);
         }
-        
 
         return { leftLineIndices, rightLineIndices };
     }
@@ -192,25 +182,31 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
     
     // roi houghlineP
     Lines houghLines;
-    cv::HoughLinesP(roi, houghLines, 1, CV_PI/180, 50, 35, 10);
+    cv::HoughLinesP(roi, houghLines, 1, CV_PI/180, mHoughThreshold, mHoughMinLineLength, mHoughMaxLineGap);
 
     if (houghLines.empty())
         return {0, mImageWidth};
 
-    std::pair<Indices, Indices> leftRightLinesPair;
-    leftRightLinesPair = HoughTransformLaneDetector::divideLines(houghLines);
 
+    // 자료형 파악 소스 코드
+    /**
+    std::pair<Indices, Indices> leftRightLinesPair;
+    leftRightLinesPair = divideLines(houghLines);
     Indices leftLines = leftRightLinesPair.first;
     Indices rightLines = leftRightLinesPair.second;
+    **/
+    auto [leftLines, rightLines] = divideLines(houghLines);
 
     leftPositionX = getLinePositionX(houghLines, leftLines, Direction::LEFT);
     rightPositionX = getLinePositionX(houghLines, rightLines, Direction::RIGHT);
 
-
     if (mDebugging)
+    {
         // draw parts
         roi.copyTo(mDebugROI);
         image.copyTo(mDebugFrame);
+    }
+
 
     return { leftPositionX, rightPositionX };
 }
