@@ -128,6 +128,7 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
         //std::vector<float> left_lines_slope, right_lines_slope;
         for (int i = 0; i < new_lines.size(); ++i)
             {
+                
                 line = new_lines[i];
                 slope = slopes[i];
                 x1 = line[0], y1 = line[1];
