@@ -35,50 +35,11 @@ void HoughTransformLaneDetector<PREC>::setConfiguration(const YAML::Node& config
 }
 
 template <typename PREC>
-std::pair<PREC, PREC> HoughTransformLaneDetector<PREC>::getLineParameters(const Lines& lines, const Indices& lineIndices) {
-
+std::pair<PREC, PREC> HoughTransformLaneDetector<PREC>::getLineParameters(const Lines& lines, const Indices& lineIndices)
+{
     // TODO : Implement this function
-
-    // 기존 코드의 vector<Vec4i>& lines의 의미 : lines vs lineIndices -> 잘 이해가 안됨.. 왜 lineIndices인지..?
-    uint32_t numLines = static_cast<uint32_t>(lineIndices.size());
-
-    if (numLines == 0)
-        return { 0.0f, 0.0f };
-
-    int32_t = x1;
-    int32_t = x2;
-    int32_t = y1;
-    int32_t = y2;
-
-    // xSum, ySum이 int형인데.. 우리는 float으로 가져와서 PREC 선언
-    PREC xSum = 0.0f;
-    PREC ySum = 0.0f;
-    PREC mSum = 0.0f;
-
-    PREC xAvg = 0.0f;
-    PREC yAvg = 0.0f;
     PREC m = 0.0f;
     PREC b = 0.0f;
-
-
-        
-    for (const auto& lineIndex : lineIndices) {
-        // x1, x2, y1, y2 선언 -> HoughTransformLaneDetector.hpp 에서 0~4(기존 코드) -> x1~y2 정의
-        x1 = lines[lineIndex][HoughIndex::x1];
-        y1 = lines[lineIndex][HoughIndex::y1];
-        x2 = lines[lineIndex][HoughIndex::x2];
-        y2 = lines[lineIndex][HoughIndex::y2];
-        xSum += x1 + x2;
-        ySum += y1 + y2;
-        mSum += static_cast<PREC>(y2 - y1) / static_cast<PREC>(X2 - X1);
-    }
-    // numLines는 unsigned int이기 때문에 static_cast로 형 변환
-    xAvg = xSum / static_cast<PREC>(numLines * 2);
-    yAvg = ySum / static_cast<PREC>(numLines * 2);
-
-    // 최종 m, b 구하기
-    m = mSum / static_cast<PREC>(numLines);
-    b = yAvg - m * xAvg;
 
     return { m, b };
 }
