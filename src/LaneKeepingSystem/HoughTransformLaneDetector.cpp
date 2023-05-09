@@ -55,13 +55,60 @@ int32_t HoughTransformLaneDetector<PREC>::getLinePositionX(const Lines& lines, c
 
 template <typename PREC>
 std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const Lines& lines)
-{
-    // TODO : Implement this function
-    Indices leftLineIndices;
-    Indices rightLineIndices;
+    {
+        // TODO : Implement this function
+        Indices leftLineIndices;
+        Indices rightLineIndices;
+        std::vector<float> slopes;
+        Lines new_lines;
+        float slope;
+        Line line;
+        
+        for (int i = 0; i < linesSize; ++i)
+        {
+            line = lines[i];
+            x1 = line[0], y1 = line[1];
+            x2 = line[2], y2 = line[3];
+            if (x2 - x1 == 0)
+            {
+                slope = 0.0;
+            }
+            else 
+            {
+                slope = float(y2 - y1) / float(x2 - x1);
+            }
+            if (std::abs(slope) > 0 && std::(abs(slope) <= mHoughLineSlopeRange)
+            {
+                slopes.push_back(slope);
+                new_lines.push_back(line);
+            }
+        }
 
-    return { leftLineIndices, rightLineIndices };
-}
+        Lines left_lines, right_lines;
+        //std::vector<float> left_lines_slope, right_lines_slope;
+        for (int i = 0; i < new_lines.size(); ++i)
+            {
+                line = new_lines[i];
+                slope = slopes[i];
+                x1 = line[0], y1 = line[1];
+                x2 = line[2], y2 = line[3];
+
+                if((slope < 0 ) && (x2 < 320))
+                {
+                    
+                    leftLineIndices.push_back(line);
+
+                    
+                }
+                else if ((slope > 0) && (x1 > 320))
+                {
+                    rightLineIndices.push_back(line);
+                }
+        }
+        
+
+        return { leftLineIndices, rightLineIndices };
+    }
 
 template <typename PREC>
 std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(const cv::Mat& image)
