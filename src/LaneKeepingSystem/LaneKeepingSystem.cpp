@@ -112,8 +112,8 @@ void LaneKeepingSystem<PREC>::drive(PREC steeringAngle)
 {
     xycar_msgs::xycar_motor motorMessage;
     motorMessage.angle = std::round(steeringAngle);
-    motorMessage.speed = std::round(mXycarSpeed);
-
+    // motorMessage.speed = std::round(mXycarSpeed);
+    motorMessage.speed = std::round(6.0f);
     mPublisher.publish(motorMessage);
 }
 

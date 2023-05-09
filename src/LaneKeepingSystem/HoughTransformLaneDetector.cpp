@@ -45,10 +45,7 @@ std::pair<PREC, PREC> HoughTransformLaneDetector<PREC>::getLineParameters(const 
     if (numLines == 0)
         return { 0.0f, 0.0f };
 
-    int32_t = x1;
-    int32_t = x2;
-    int32_t = y1;
-    int32_t = y2;
+    int32_t x1, x2, y1, y2;
 
     // xSum, ySum이 int형인데.. 우리는 float으로 가져와서 PREC 선언
     PREC xSum = 0.0f;
@@ -69,7 +66,7 @@ std::pair<PREC, PREC> HoughTransformLaneDetector<PREC>::getLineParameters(const 
         y2 = lines[lineIndex][HoughIndex::y2];
         xSum += x1 + x2;
         ySum += y1 + y2;
-        mSum += static_cast<PREC>(y2 - y1) / static_cast<PREC>(X2 - X1);
+        mSum += static_cast<PREC>(y2 - y1) / static_cast<PREC>(x2 - x1);
     }
     // numLines는 unsigned int이기 때문에 static_cast로 형 변환
     xAvg = xSum / static_cast<PREC>(numLines * 2);
@@ -86,14 +83,14 @@ template <typename PREC>
 int32_t HoughTransformLaneDetector<PREC>::getLinePositionX(const Lines& lines, const Indices& lineIndices, Direction direction)
 {
     // TODO : Implement this function
-     int32_t positionX = 0;
+    int32_t positionX = 0;
 	float y = 0.0;
 
 	const auto [m,b] = getLineParameters(lines,lineIndices);
 		
 
 	if (m == 0.0 && b == 0.0){
-		if(direction == LEFT){
+		if(direction == Direction::LEFT){
 			positionX =0;
 	}else{
 			positionX = mImageWidth;
@@ -115,30 +112,31 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
         // TODO : Implement this function
         Indices leftLineIndices;
         Indices rightLineIndices;
+
+        int32_t x1, y1, x2, y2;
         std::vector<float> slopes;
         Lines new_lines;
         float slope;
         Line line;
         
-        for (int i = 0; i < linesSize; ++i)
+        for (const auto& tempLine : lines)
         {
-            line = lines[i];
-            int32_t x1 = line[0];
-            int32_t y1 = line[1];
-            int32_t x2 = line[2];
-            int32_t y2 = line[3];
+            x1 = tempLine[HoughIndex::x1];
+            y1 = tempLine[HoughIndex::y1];
+            x2 = tempLine[HoughIndex::x2];
+            y2 = tempLine[HoughIndex::y2];
             if (x2 - x1 == 0)
             {
                 slope = 0.0;
             }
             else 
             {
-                slope = float(y2 - y1) / float(x2 - x1);
+                slope = static_cast<PREC>(y2 - y1) / static_cast<PREC>(x2 - x1);
             }
-            if (std::abs(slope) > 0 && std::(abs(slope) <= mHoughLineSlopeRange))
+            if (std::abs(slope) > 0 && (std::abs(slope) <= mHoughLineSlopeRange))
             {
                 slopes.push_back(slope);
-                new_lines.push_back(line);
+                new_lines.push_back(tempLine);
             }
         }
 
@@ -155,13 +153,13 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
                 if((slope < 0 ) && (x2 < 320))
                 {
                     
-                    leftLineIndices.push_back(line);
+                    leftLineIndices.push_back(i);
 
                     
                 }
                 else if ((slope > 0) && (x1 > 320))
                 {
-                    rightLineIndices.push_back(line);
+                    rightLineIndices.push_back(i);
                 }
         }
         
@@ -188,7 +186,7 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
 
     cv::Mat roi;
 
-    roi = Canny(cv::Rect(0, mROIStartHeight, mImageWidth, mROIHeight));
+    roi = canny(cv::Rect(0, mROIStartHeight, mImageWidth, mROIHeight));
 
     // roi houghlineP
     Lines houghLines;
@@ -201,7 +199,7 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
     leftRightLinesPair = HoughTransformLaneDetector::divideLines(houghLines);
 
     Indices leftLines = leftRightLinesPair.first;
-    Indices rightLInes = leftRightLinesPair.second;
+    Indices rightLines = leftRightLinesPair.second;
 
     leftPositionX = getLinePositionX(houghLines, leftLines, Direction::LEFT);
     rightPositionX = getLinePositionX(houghLines, rightLines, Direction::RIGHT);
