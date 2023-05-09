@@ -109,7 +109,39 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
     int32_t leftPositionX = 0;
     int32_t rightPositionX = 0;
 
+    cv::Mat gray;
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+
+    cv::Mat blur;
+    cv::GaussianBlur(gray, blur, cv::Size(), 1.);
+    // cv::imshow("blur", blur);
+
+    cv::Mat canny;
+    cv::Canny(blur, canny, 150, 200);
+
+    cv::Mat roi;
+
+    roi = Canny(cv::Rect(0, mROIStartHeight, mImageWidth, mROIHeight));
+
+    // roi houghlineP
+    Lines houghLines;
+    cv::HoughLinesP(roi, houghLines, 1, CV_PI/180, 45, 45, 20);
+
+    if (houghLines.empty())
+        return {0, mImageWidth};
+
+    std::pair<Indices, Indices> leftRightLinesPair;
+    leftRightLinesPair = HoughTransformLaneDetector::divideLines(houghLines);
+
+    Indices leftLines = leftRightLinesPair.first;
+    Indices rightLInes = leftRightLinesPair.second;
+
+    leftPositionX = getLinePositionX(houghLines, leftLines, Direction::LEFT);
+    rightPositionX = getLinePositionX(houghLines, rightLines, Direction::RIGHT);
+
+
     if (mDebugging)
+        // draw parts
         image.copyTo(mDebugFrame);
 
     return { leftPositionX, rightPositionX };
