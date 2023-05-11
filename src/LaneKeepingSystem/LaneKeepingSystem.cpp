@@ -80,7 +80,7 @@ void LaneKeepingSystem<PREC>::run()
         int32_t errorFromMid = estimatedPositionX - static_cast<int32_t>(mFrame.cols / 2);
         PREC steeringAngle = std::max(static_cast<PREC>(-kXycarSteeringAangleLimit), std::min(static_cast<PREC>(mPID->getControlOutput(errorFromMid)), static_cast<PREC>(kXycarSteeringAangleLimit)));
 
-
+        PREC cte = (static_cast<PREC>(errorFromMid) * 2.0f) / static_cast<PREC>(mFrame.cols);
         /** errorFromMid의 값이 양의 값일 때 특정 값보다 큰 경우 
              => HoughTransformLaneDetector에게 왼쪽에서만 차선 검출하라고 지시.
             만약 왼쪽 차선의 추출이 불가능하면 다시 양쪽의 경우도 검출해본다.
@@ -90,17 +90,17 @@ void LaneKeepingSystem<PREC>::run()
         **/
         if (mDebugging)
             std::cout << "error: " << errorFromMid;
-        if (errorFromMid > 2)
+        if (cte > 0.2f)
         {
             leftDetector = true;
             rightDetector = false;
         }
-        else if (errorFromMid < -2)
+        else if (cte < -0.2f)
         {
             leftDetector = false;
             rightDetector = true;
         }
-        else if (abs(errorFromMid) <= 2)
+        else if (abs(cte) <= 0.2)
         {
             leftDetector = true;
             rightDetector = true;
