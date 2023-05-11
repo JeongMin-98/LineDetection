@@ -52,10 +52,18 @@ LaneKeepingSystem<PREC>::~LaneKeepingSystem()
     delete mMovingAverage;
     delete mHoughTransformLaneDetector;
 }
-
+template <typename PREC>
+void LaneKeepingSystem<PREC>::toSignal(bool leftDetector, bool rightDector, typename HoughTransformLaneDetector<PREC>::Ptr mHoughTransformLaneDetector)
+{
+    ptr = mHoughTransformLaneDetector;
+    ptr->oneLaneByLeft = leftDetector;
+    ptr->oneLangByRight = rightDetector;
+}
 template <typename PREC>
 void LaneKeepingSystem<PREC>::run()
 {
+    bool leftDetector;
+    bool rightDetector;
     ros::Rate rate(kFrameRate);
     while (ros::ok())
     {
@@ -63,22 +71,50 @@ void LaneKeepingSystem<PREC>::run()
         if (mFrame.empty())
             continue;
         cv::imshow("frame", mFrame);
-        const auto [leftPosisionX, rightPositionX] = mHoughTransformLaneDetector->getLanePosition(mFrame);
+        const auto [leftPositionX, rightPositionX] = mHoughTransformLaneDetector->getLanePosition(mFrame);
 
-        mMovingAverage->addSample(static_cast<int32_t>((leftPosisionX + rightPositionX) / 2));
+        mMovingAverage->addSample(static_cast<int32_t>((leftPositionX + rightPositionX) / 2));
 
         int32_t estimatedPositionX = static_cast<int32_t>(mMovingAverage->getResult());
 
         int32_t errorFromMid = estimatedPositionX - static_cast<int32_t>(mFrame.cols / 2);
         PREC steeringAngle = std::max(static_cast<PREC>(-kXycarSteeringAangleLimit), std::min(static_cast<PREC>(mPID->getControlOutput(errorFromMid)), static_cast<PREC>(kXycarSteeringAangleLimit)));
 
+
+        /** errorFromMid의 값이 양의 값일 때 특정 값보다 큰 경우 
+             => HoughTransformLaneDetector에게 왼쪽에서만 차선 검출하라고 지시.
+            만약 왼쪽 차선의 추출이 불가능하면 다시 양쪽의 경우도 검출해본다.
+
+            errorFromMid의 값이 음의 값인데 특정 음의 값보다 큰 경우 (즉 작은 경우)
+            회전을 왼쪽으로 한다고 판단 Detector에게 오른쪽에서만 차선 검출하라고 지시
+        **/
+        if (mDebugging)
+            std::cout << "error: " << errorFromMid;
+        if (errorFromMid > 2)
+        {
+            leftDetector = true;
+            rightDetector = false;
+        }
+        else if (errorFromMid < -2)
+        {
+            leftDetector = false;
+            rightDetector = true;
+        }
+        else if (abs(errorFromMid) <= 2)
+        {
+            leftDetector = true;
+            rightDetector = true;
+        }
+
+        toSignal(leftDetector, rightDetector, mHoughTransformLaneDetector);
+
         speedControl(steeringAngle);
         drive(steeringAngle);
 
         if (mDebugging)
         {
-            std::cout << "lpos: " << leftPosisionX << ", rpos: " << rightPositionX << ", mpos: " << estimatedPositionX << std::endl;
-            mHoughTransformLaneDetector->drawRectangles(leftPosisionX, rightPositionX, estimatedPositionX);
+            std::cout << "lpos: " << leftPositionX << ", rpos: " << rightPositionX << ", mpos: " << estimatedPositionX << std::endl;
+            mHoughTransformLaneDetector->drawRectangles(leftPositionX, rightPositionX, estimatedPositionX);
             cv::imshow("Debug", mHoughTransformLaneDetector->getDebugFrame());
             cv::imshow("roi", mHoughTransformLaneDetector->getDebugROI());
             cv::waitKey(1);

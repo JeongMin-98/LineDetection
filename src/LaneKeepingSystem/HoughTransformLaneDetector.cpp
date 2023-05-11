@@ -150,10 +150,30 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
             x1 = line[0], y1 = line[1];
             x2 = line[2], y2 = line[3];
 
+#if 0            
             if((slope < 0 ) && (x2 < center))
                 leftLineIndices.push_back(i);
             else if ((slope > 0) && (x1 > center))
                 rightLineIndices.push_back(i);
+#else
+            if oneLaneByLeft && oneLaneByRight
+            {
+                if((slope < 0 ) && (x2 < center))
+                    leftLineIndices.push_back(i);
+                else if ((slope > 0) && (x1 > center))
+                    rightLineIndices.push_back(i);
+            }
+            else if !oneLaneByLeft && oneLaneByRight
+            {
+                if slope > 0
+                    rightLineIndices.push_back(i);
+            }
+            else if oneLaneByLeft && oneLaneByRight
+            {
+                if slope < 0
+                    leftLineIndices.push_back(i);
+            }
+#endif
         }
 
         return { leftLineIndices, rightLineIndices };
@@ -196,6 +216,7 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
     Indices rightLines = leftRightLinesPair.second;
     **/
     auto [leftLines, rightLines] = divideLines(houghLines);
+    // divideLines에서 구현
 
     leftPositionX = getLinePositionX(houghLines, leftLines, Direction::LEFT);
     rightPositionX = getLinePositionX(houghLines, rightLines, Direction::RIGHT);

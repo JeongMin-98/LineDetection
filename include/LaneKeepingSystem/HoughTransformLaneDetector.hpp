@@ -55,6 +55,16 @@ class HoughTransformLaneDetector final
 public:
     using Ptr = HoughTransformLaneDetector*; ///< Pointer type of this class
 
+    // 초기 상태이거나 직진 상태일 경우 true, true로 양 사이드 차선을 검출
+    bool oneLaneByLeft = true;
+    // lanekeepingsystem으로 부터 값을 전달 받은 경우 False로 변환
+    // bool oneLaneByRight = False;
+    // 위와 같은 경우 왼쪽 차선만 검출하여 전달해줌.
+    // 반대와 같은 경우는 아래와 같이 표현 가능.
+    // bool oneLangByLeft = False;
+    bool oneLaneByRight = true;
+
+
     static constexpr double kHoughRho = 4.0;                  ///< Distance resolution of the accumulator in pixels.
     static constexpr double kHoughTheta = CV_PI / 180.0;      ///< Angle resolution of the accumulator in radians. If C++20, CV_PI should be replaced with std::numbers::pi
     static constexpr int32_t kDebugLineWidth = 2;             ///< Thickness of lines for debugging
@@ -71,6 +81,7 @@ public:
      * @param[in] config Configuration including parameters for detector
      */
     HoughTransformLaneDetector(const YAML::Node& config) { setConfiguration(config); }
+    void get_signal(bool leftDector, bool rightDector);
 
     /**
      * @brief Get the Lane Position object
@@ -96,6 +107,7 @@ public:
      */
     const cv::Mat& getDebugFrame() const { return mDebugFrame; };
     const cv::Mat& getDebugROI() const {return mDebugROI; };
+    
 
 private:
     /**

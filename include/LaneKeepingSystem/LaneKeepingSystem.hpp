@@ -55,6 +55,11 @@ public:
      */
     void run();
 
+    /**
+     * @brief Send signal to houghtransformLaneDetctor
+    */
+    void LaneKeepingSystem<PREC>::toSignal(bool leftDetector, bool rightDetector, typename HoughTransformLaneDetector<PREC>::Ptr mHoughTransformLaneDetector);
+
 private:
     /**
      * @brief Set the parameters from config file
