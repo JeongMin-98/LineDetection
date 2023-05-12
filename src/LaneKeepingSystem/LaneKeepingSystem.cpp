@@ -52,13 +52,14 @@ LaneKeepingSystem<PREC>::~LaneKeepingSystem()
     delete mMovingAverage;
     delete mHoughTransformLaneDetector;
 }
+
 template <typename PREC>
-void LaneKeepingSystem<PREC>::toSignal(bool leftDetector, bool rightDector, typename HoughTransformLaneDetector<PREC>::Ptr mHoughTransformLaneDetector)
+void LaneKeepingSystem<PREC>::sender(bool leftDetector, bool rightDetector, DetectorPtr ptr)
 {
-    ptr = mHoughTransformLaneDetector;
     ptr->oneLaneByLeft = leftDetector;
-    ptr->oneLangByRight = rightDetector;
+    ptr->oneLaneByRight = rightDetector;
 }
+
 template <typename PREC>
 void LaneKeepingSystem<PREC>::run()
 {
@@ -106,7 +107,7 @@ void LaneKeepingSystem<PREC>::run()
             rightDetector = true;
         }
 
-        toSignal(leftDetector, rightDetector, mHoughTransformLaneDetector);
+        sender(leftDetector, rightDetector, mHoughTransformLaneDetector);
 
         speedControl(steeringAngle);
         drive(steeringAngle);
@@ -149,8 +150,8 @@ void LaneKeepingSystem<PREC>::drive(PREC steeringAngle)
 {
     xycar_msgs::xycar_motor motorMessage;
     motorMessage.angle = std::round(steeringAngle);
-    // motorMessage.speed = std::round(mXycarSpeed);
-    motorMessage.speed = std::round(6.0f);
+    motorMessage.speed = std::round(mXycarSpeed);
+    // motorMessage.speed = std::round(6.0f);
     mPublisher.publish(motorMessage);
 }
 

@@ -58,7 +58,7 @@ public:
     /**
      * @brief Send signal to houghtransformLaneDetctor
     */
-    void LaneKeepingSystem<PREC>::toSignal(bool leftDetector, bool rightDetector, typename HoughTransformLaneDetector<PREC>::Ptr mHoughTransformLaneDetector);
+    void sender(bool leftDetector, bool rightDetector, DetectorPtr ptr);
 
 private:
     /**

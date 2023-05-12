@@ -156,21 +156,21 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
             else if ((slope > 0) && (x1 > center))
                 rightLineIndices.push_back(i);
 #else
-            if oneLaneByLeft && oneLaneByRight
+            if (oneLaneByLeft && oneLaneByRight)
             {
                 if((slope < 0 ) && (x2 < center))
                     leftLineIndices.push_back(i);
                 else if ((slope > 0) && (x1 > center))
                     rightLineIndices.push_back(i);
             }
-            else if !oneLaneByLeft && oneLaneByRight
+            else if (!oneLaneByLeft && oneLaneByRight)
             {
-                if slope > 0
+                if (slope > 0)
                     rightLineIndices.push_back(i);
             }
-            else if oneLaneByLeft && oneLaneByRight
+            else if (oneLaneByLeft && !oneLaneByRight)
             {
-                if slope < 0
+                if (slope < 0)
                     leftLineIndices.push_back(i);
             }
 #endif
