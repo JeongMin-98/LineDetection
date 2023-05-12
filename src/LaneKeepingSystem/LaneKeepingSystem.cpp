@@ -21,6 +21,7 @@ LaneKeepingSystem<PREC>::LaneKeepingSystem()
     mNodeHandler.getParam("config_path", configPath);
     YAML::Node config = YAML::LoadFile(configPath);
 
+    curvePID = new PIDController<PREC>(config["PID"]["CURVE_P_GAIN"].as<PREC>(), config["PID"]["CURVE_I_GAIN"].as<PREC>(), config["PID"]["CURVE_D_GAIN"].as<PREC>());
     mPID = new PIDController<PREC>(config["PID"]["P_GAIN"].as<PREC>(), config["PID"]["I_GAIN"].as<PREC>(), config["PID"]["D_GAIN"].as<PREC>());
     mMovingAverage = new MovingAverageFilter<PREC>(config["MOVING_AVERAGE_FILTER"]["SAMPLE_SIZE"].as<uint32_t>());
     mHoughTransformLaneDetector = new HoughTransformLaneDetector<PREC>(config);
@@ -42,6 +43,7 @@ void LaneKeepingSystem<PREC>::setParams(const YAML::Node& config)
     mXycarSpeedControlThreshold = config["XYCAR"]["SPEED_CONTROL_THRESHOLD"].as<PREC>();
     mAccelerationStep = config["XYCAR"]["ACCELERATION_STEP"].as<PREC>();
     mDecelerationStep = config["XYCAR"]["DECELERATION_STEP"].as<PREC>();
+    mCteParams = config['CTE']['CTE_ERROR'].as<PREC>();
     mDebugging = config["DEBUG"].as<bool>();
 }
 
@@ -65,6 +67,14 @@ void LaneKeepingSystem<PREC>::run()
 {
     bool leftDetector;
     bool rightDetector;
+
+    PREC leftCurveCTE = 0.0f;
+    int32_t leftCount = 0;
+    PREC rightCurveCTE = 0.0f;
+    int32_t rightCount = 0;
+    PREC forwardCTE;
+    int32_t forwardCount = 0;
+
     ros::Rate rate(kFrameRate);
     while (ros::ok())
     {
@@ -91,29 +101,52 @@ void LaneKeepingSystem<PREC>::run()
             회전을 왼쪽으로 한다고 판단 Detector에게 오른쪽에서만 차선 검출하라고 지시
         **/
         if (mDebugging)
-            std::cout << "error: " << cte;
-        if (cte > 0.2f)
+
+            if (!leftDetector || !rightDetector)
+            {
+                std::cout << "leftOnly: " << leftDetector;
+                std::cout << "rightOnly: " << rightDetector;
+                std::cout << "cte: " << cte << endl;
+            }
+
+        if (cte > mCteParams)
         {
+            if (mDebugging)
+            {
+                rightCount += 1;
+                rightCurveCTE += cte;
+            }
             leftDetector = true;
             rightDetector = false;
+            erroFromMid = static_cast<PREC>(curvePID->getControlOutput(errorFromMid));
         }
-        else if (cte < -0.2f)
+        else if (cte < mCteParams * -1.0f)
         {
+            if (mDebugging)
+            {
+                leftCount += 1;
+                leftCurveCTE += cte;
+            }
             leftDetector = false;
             rightDetector = true;
+            erroFromMid = static_cast<PREC>(curvePID->getControlOutput(errorFromMid));
         }
-        else if (abs(cte) <= 0.2f)
+        else if (abs(cte) <= mCteParams)
         {
+            if (mDebugging)
+            {
+                forwardCount += 1;
+                forwardCurveCTE += cte;
+            }
             leftDetector = true;
             rightDetector = true;
             errorFromMid = static_cast<PREC>(mPID->getControlOutput(errorFromMid));
         }
 
-        sender(leftDetector, rightDetector, mHoughTransformLaneDetector);
 
-        
         speedControl(errorFromMid);
         drive(errorFromMid);
+        sender(leftDetector, rightDetector, mHoughTransformLaneDetector);
 
         if (mDebugging)
         {
@@ -125,6 +158,17 @@ void LaneKeepingSystem<PREC>::run()
             cv::waitKey(1);
         }
         // rate.sleep();
+    }
+
+    if (mDebugging)
+    {
+        PREC averageRightCTE = curveRightCTE / static_cast<PREC>(rightCount);
+        PREC averageLeftCTE = curveLeftCTE / static_cast<PREC>(leftCount);
+        PREC averageForwardCTE = curveForwardCTE / static_cast<PREC>(forwardCount);
+        std::cout << "result: " << std::endl;
+        std::cout << "right: " << averageRightCTE;
+        std::cout << "left: " << averageleftCTE;
+        std::cout << "forward: " << averageforwardCTE;
     }
 }
 
