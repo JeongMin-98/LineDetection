@@ -91,6 +91,7 @@ private:
 
 private:
     ControllerPtr mPID;                      ///< PID Class for Control
+    ControllerPtr curvePID;
     FilterPtr mMovingAverage;                ///< Moving Average Filter Class for Noise filtering
     DetectorPtr mHoughTransformLaneDetector; ///< Hough Transform Lane Detector Class for Lane Detection
 
@@ -113,7 +114,7 @@ private:
     PREC mXycarSpeedControlThreshold; ///< Threshold of angular of xycar
     PREC mAccelerationStep;           ///< How much would accelrate xycar depending on threshold
     PREC mDecelerationStep;           ///< How much would deaccelrate xycar depending on threshold
-
+    PREC mCteParams; 
     // Debug Flag
     bool mDebugging; ///< Debugging or not
 };

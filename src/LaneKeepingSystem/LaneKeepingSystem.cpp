@@ -43,7 +43,7 @@ void LaneKeepingSystem<PREC>::setParams(const YAML::Node& config)
     mXycarSpeedControlThreshold = config["XYCAR"]["SPEED_CONTROL_THRESHOLD"].as<PREC>();
     mAccelerationStep = config["XYCAR"]["ACCELERATION_STEP"].as<PREC>();
     mDecelerationStep = config["XYCAR"]["DECELERATION_STEP"].as<PREC>();
-    mCteParams = config['CTE']['CTE_ERROR'].as<PREC>();
+    mCteParams = config["CTE"]["CTE_ERROR"].as<PREC>();
     mDebugging = config["DEBUG"].as<bool>();
 }
 
@@ -51,6 +51,7 @@ template <typename PREC>
 LaneKeepingSystem<PREC>::~LaneKeepingSystem()
 {
     delete mPID;
+    delete curvePID;
     delete mMovingAverage;
     delete mHoughTransformLaneDetector;
 }
@@ -106,7 +107,7 @@ void LaneKeepingSystem<PREC>::run()
             {
                 std::cout << "leftOnly: " << leftDetector;
                 std::cout << "rightOnly: " << rightDetector;
-                std::cout << "cte: " << cte << endl;
+                std::cout << "cte: " << cte << std::endl;
             }
 
         if (cte > mCteParams)
@@ -118,7 +119,7 @@ void LaneKeepingSystem<PREC>::run()
             }
             leftDetector = true;
             rightDetector = false;
-            erroFromMid = static_cast<PREC>(curvePID->getControlOutput(errorFromMid));
+            errorFromMid = static_cast<PREC>(curvePID->getControlOutput(errorFromMid));
         }
         else if (cte < mCteParams * -1.0f)
         {
@@ -129,14 +130,14 @@ void LaneKeepingSystem<PREC>::run()
             }
             leftDetector = false;
             rightDetector = true;
-            erroFromMid = static_cast<PREC>(curvePID->getControlOutput(errorFromMid));
+            errorFromMid = static_cast<PREC>(curvePID->getControlOutput(errorFromMid));
         }
         else if (abs(cte) <= mCteParams)
         {
             if (mDebugging)
             {
                 forwardCount += 1;
-                forwardCurveCTE += cte;
+                forwardCTE += cte;
             }
             leftDetector = true;
             rightDetector = true;
@@ -162,13 +163,13 @@ void LaneKeepingSystem<PREC>::run()
 
     if (mDebugging)
     {
-        PREC averageRightCTE = curveRightCTE / static_cast<PREC>(rightCount);
-        PREC averageLeftCTE = curveLeftCTE / static_cast<PREC>(leftCount);
-        PREC averageForwardCTE = curveForwardCTE / static_cast<PREC>(forwardCount);
+        PREC averageRightCTE = rightCurveCTE / static_cast<PREC>(rightCount);
+        PREC averageLeftCTE = leftCurveCTE / static_cast<PREC>(leftCount);
+        PREC averageForwardCTE = forwardCTE / static_cast<PREC>(forwardCount);
         std::cout << "result: " << std::endl;
-        std::cout << "right: " << averageRightCTE;
-        std::cout << "left: " << averageleftCTE;
-        std::cout << "forward: " << averageforwardCTE;
+        std::cout << "right: " << averageRightCTE << std::endl;
+        std::cout << "left: " << averageLeftCTE  << std::endl;
+        std::cout << "forward: " << averageForwardCTE <<std::endl;
     }
 }
 

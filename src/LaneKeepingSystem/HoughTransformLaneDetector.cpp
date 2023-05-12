@@ -187,8 +187,8 @@ std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(co
     int32_t rightPositionX = 0;
 
     cv::Mat gray;
-    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
 
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
     cv::Mat blur;
     cv::GaussianBlur(gray, blur, cv::Size(), 1.);
     // cv::imshow("blur", blur);
