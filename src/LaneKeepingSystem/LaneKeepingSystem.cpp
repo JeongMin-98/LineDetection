@@ -89,6 +89,10 @@ void LaneKeepingSystem<PREC>::run()
 
         int32_t estimatedPositionX = static_cast<int32_t>((leftPositionX + rightPositionX) / 2);
 
+        /**
+         * below code Written By JeongMin (jeongmin981@gmail.com)
+         * Line 96 ~ 154
+         */
         int32_t errorFromMid = estimatedPositionX - static_cast<int32_t>(mFrame.cols / 2);
         
         PREC cte = (static_cast<PREC>(errorFromMid) * 2.0f) / static_cast<PREC>(mFrame.cols);
